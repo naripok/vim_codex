@@ -6,9 +6,10 @@ except:
 
 import json
 import openai
+from os import path
 
 
-with open("~/.openai/credentials.json") as f:
+with open(path.expanduser("~/.openai/credentials.json")) as f:
     config = json.load(f)
 
 openai.organization = config["organizationId"]
