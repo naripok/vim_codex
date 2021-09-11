@@ -3,10 +3,9 @@ if !has("python3")
   finish
 endif
 
-if exists('g:sample_python_plugin_loaded')
+if exists('g:vim_codex_loaded')
     finish
 endif
-
 
 let s:plugin_root_dir = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 
@@ -20,8 +19,6 @@ sys.path.insert(0, python_root_dir)
 import plugin
 EOF
 
-
-
 function! CreateCompletion(max_tokens)
   python3 plugin.create_completion()
 endfunction
@@ -30,12 +27,9 @@ function! CreateCompletionLine()
   python3 plugin.create_completion(stop='\n')
 endfunction
 
-
-
 command! -nargs=? CreateCompletion call CreateCompletion(<q-args>)
 command! -nargs=0 CreateCompletionLine call CreateCompletionLine()
 
 map <Leader>co :CreateCompletion<CR>
 
-
-let g:sample_python_plugin_loaded = 1
+let g:vim_codex_loaded = 1
