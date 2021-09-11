@@ -18,6 +18,7 @@ openai.api_key = config["secretKey"]
 MAX_SUPPORTED_INPUT_LENGTH = 4096
 USE_STREAM_FEATURE = True
 MAX_TOKENS_DEFAULT = 64
+TEMPERATURE = 0.2
 
 
 def complete_input_max_length(
@@ -28,7 +29,7 @@ def complete_input_max_length(
         engine="davinci-codex",
         prompt=input_prompt,
         best_of=1,
-        temperature=0.5,
+        temperature=TEMPERATURE,
         max_tokens=max_tokens,
         stream=USE_STREAM_FEATURE,
         stop=stop,
