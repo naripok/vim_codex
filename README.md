@@ -35,6 +35,6 @@ To complete the current text from insert and normal mode using Ctrl+x, you can a
 lines to your .vimrc::
 
 ```
-nmap  <C-x> :CreateCompletion<CR>
-imap  <C-x> <Esc>l:CreateCompletion<CR>i
+nnoremap  <C-x> :CreateCompletion<CR>
+inoremap  <C-x> <Esc>li<C-g>u<Esc>l:CreateCompletion<CR>
 ```
