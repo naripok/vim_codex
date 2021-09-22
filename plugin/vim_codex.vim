@@ -30,6 +30,6 @@ endfunction
 command! -nargs=? CreateCompletion call CreateCompletion(<q-args>)
 command! -nargs=0 CreateCompletionLine call CreateCompletionLine()
 
-map <Leader>co :CreateCompletion<CR>
+nnoremap <Leader>co :CreateCompletion<CR>
 
 let g:vim_codex_loaded = 1

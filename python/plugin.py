@@ -21,6 +21,19 @@ MAX_TOKENS_DEFAULT = 64
 TEMPERATURE = 0.2
 
 
+def get_range():
+    buf = vim.current.buffer
+    (lnum1, col1) = buf.mark("<")
+    (lnum2, col2) = buf.mark(">")
+    lines = vim.eval("getline({}, {})".format(lnum1, lnum2))
+    if len(lines) == 1:
+        lines[0] = lines[0][col1 : col2 + 1]
+    else:
+        lines[0] = lines[0][col1:]
+        lines[-1] = lines[-1][: col2 + 1]
+    return "\n".join(lines)
+
+
 def complete_input_max_length(
     input_prompt, max_input_length=MAX_SUPPORTED_INPUT_LENGTH, stop=None, max_tokens=64
 ):
@@ -69,7 +82,8 @@ def get_max_tokens():
 
 def create_completion(stop=None):
     max_tokens = get_max_tokens()
-    vim_buf = vim.current.buffer
+    # vim_buf = vim.current.buffer
+    vim_buf = get_range()
     input_prompt = "\n".join(vim_buf[:])
 
     row, col = vim.current.window.cursor
