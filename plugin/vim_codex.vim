@@ -23,13 +23,18 @@ function! CreateCompletion(max_tokens)
   python3 plugin.create_completion()
 endfunction
 
+function! CreateVisualCompletionStream(max_tokens)
+  python3 plugin.create_visual_completion_stream()
+endfunction
+
 function! CreateCompletionLine()
   python3 plugin.create_completion(stop='\n')
 endfunction
 
 command! -nargs=? CreateCompletion call CreateCompletion(<q-args>)
+command! -nargs=? CreateVisualCompletionStream call CreateVisualCompletionStream(<q-args>)
 command! -nargs=0 CreateCompletionLine call CreateCompletionLine()
 
-vnoremap <Leader>co :CreateCompletion<CR>
+nnoremap <Leader>I :CreateCompletion 1024<CR>
 
 let g:vim_codex_loaded = 1

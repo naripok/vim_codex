@@ -136,3 +136,88 @@ def write_response(response, stop):
         if USE_STREAM_FEATURE:
             if single_response["choices"][0]["finish_reason"] != None:
                 break
+
+
+def get_visual_selection():
+    buf = vim.current.buffer
+    (lnum1, col1) = buf.mark("<")
+    (lnum2, col2) = buf.mark(">")
+    visual_selection = "\n".join(buf[lnum1 - 1 : lnum2])
+    return visual_selection
+
+
+def get_visual_selection_max_length():
+    buf = vim.current.buffer
+    (lnum1, col1) = buf.mark("<")
+    (lnum2, col2) = buf.mark(">")
+    visual_selection = "\n".join(buf[lnum1 - 1 : lnum2])
+    return int(2.5 * len(visual_selection))
+
+
+def complete_visual_input(visual_selection, stop, max_tokens):
+    try:
+        response = complete_input_max_length(
+            visual_selection,
+            get_visual_selection_max_length(),
+            stop=stop,
+            max_tokens=max_tokens,
+        )
+    except openai.InvalidRequestError:
+        response = complete_input_max_length(
+            visual_selection, MAX_SUPPORTED_INPUT_LENGTH, stop=stop
+        )
+
+    return response
+
+
+def create_visual_completion_stream(stop=None):
+    max_tokens = get_max_tokens()
+    visual_selection = get_visual_selection()
+    response = complete_visual_input(visual_selection, stop=stop, max_tokens=max_tokens)
+    write_response_stream(response, stop=stop)
+
+
+def write_response_stream(response, stop):
+    vim_buf = vim.current.buffer
+    vim_win = vim.current.window
+    while True:
+        single_response = next(response)
+
+        completion = single_response["choices"][0]["text"]
+
+        if stop == "\n":
+            completion += "\n"
+
+        row, col = vim.current.window.cursor
+        current_line = vim.current.buffer[row - 1]
+        new_line = current_line[:col] + completion + current_line[col:]
+
+        new_lines = new_line.split("\n")
+        new_lines.reverse()
+
+        if len(vim_buf) == row:
+            vim_buf.append("")
+
+        vim_buf[row - 1] = None
+        cursor_pos_base = tuple(vim_win.cursor)
+
+        row_i = 0
+        for row_i in range(len(new_lines)):
+            vim.current.buffer[row - 1 : row - 1] = [new_lines[row_i]]
+
+        if new_line == "":
+            cursor_target_col = 0
+        elif new_line[-1] != "\n":
+            cursor_target_col = len(new_lines[0])
+        else:
+            cursor_target_col = 0
+
+        vim_win.cursor = (cursor_pos_base[0] + row_i, cursor_target_col)
+
+        if not USE_STREAM_FEATURE:
+            break
+
+        # Flush the vim buffer.
+        vim.command("redraw")
+        if single_response["choices"][0]["finish_reason"] != None:
+            break
