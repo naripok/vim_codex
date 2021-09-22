@@ -15,23 +15,13 @@ with open(path.expanduser("~/.openai/credentials.json")) as f:
 openai.organization = config["organizationId"]
 openai.api_key = config["secretKey"]
 
+
+ENGINE = "davinci-codex"
 MAX_SUPPORTED_INPUT_LENGTH = 4096
 USE_STREAM_FEATURE = True
 MAX_TOKENS_DEFAULT = 64
-TEMPERATURE = 0.2
-
-
-def get_range():
-    buf = vim.current.buffer
-    (lnum1, col1) = buf.mark("<")
-    (lnum2, col2) = buf.mark(">")
-    lines = vim.eval("getline({}, {})".format(lnum1, lnum2))
-    if len(lines) == 1:
-        lines[0] = lines[0][col1 : col2 + 1]
-    else:
-        lines[0] = lines[0][col1:]
-        lines[-1] = lines[-1][: col2 + 1]
-    return "\n".join(lines)
+TEMPERATURE = 0
+BEST_OF = 1
 
 
 def complete_input_max_length(
@@ -39,13 +29,13 @@ def complete_input_max_length(
 ):
     input_prompt = input_prompt[-max_input_length:]
     response = openai.Completion.create(
-        engine="davinci-codex",
         prompt=input_prompt,
-        best_of=1,
-        temperature=TEMPERATURE,
         max_tokens=max_tokens,
-        stream=USE_STREAM_FEATURE,
         stop=stop,
+        engine=ENGINE,
+        best_of=BEST_OF,
+        temperature=TEMPERATURE,
+        stream=USE_STREAM_FEATURE,
     )
     return response
 
@@ -62,7 +52,6 @@ def complete_input(input_prompt, stop, max_tokens):
         response = complete_input_max_length(
             input_prompt, MAX_SUPPORTED_INPUT_LENGTH, stop=stop
         )
-        # print('Using shorter input.')
 
     return response
 
@@ -82,8 +71,7 @@ def get_max_tokens():
 
 def create_completion(stop=None):
     max_tokens = get_max_tokens()
-    # vim_buf = vim.current.buffer
-    vim_buf = get_range()
+    vim_buf = vim.current.buffer
     input_prompt = "\n".join(vim_buf[:])
 
     row, col = vim.current.window.cursor
@@ -102,24 +90,32 @@ def write_response(response, stop):
             single_response = next(response)
         else:
             single_response = response
+
         completion = single_response["choices"][0]["text"]
+
         if stop == "\n":
             completion += "\n"
+
         row, col = vim.current.window.cursor
         current_line = vim.current.buffer[row - 1]
         new_line = current_line[:col] + completion + current_line[col:]
+
         if not USE_STREAM_FEATURE:
             if new_line == "":
                 new_line = new_line
             elif new_line[-1] == "\n":
                 new_line = new_line[:-1]
+
         new_lines = new_line.split("\n")
         new_lines.reverse()
+
         if len(vim_buf) == row:
             vim_buf.append("")
 
         vim_buf[row - 1] = None
         cursor_pos_base = tuple(vim_win.cursor)
+
+        row_i = 0
         for row_i in range(len(new_lines)):
             vim.current.buffer[row - 1 : row - 1] = [new_lines[row_i]]
 
@@ -129,6 +125,7 @@ def write_response(response, stop):
             cursor_target_col = len(new_lines[0])
         else:
             cursor_target_col = 0
+
         vim_win.cursor = (cursor_pos_base[0] + row_i, cursor_target_col)
 
         if not USE_STREAM_FEATURE:
