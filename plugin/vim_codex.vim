@@ -36,5 +36,6 @@ command! -nargs=? CreateVisualCompletionStream call CreateVisualCompletionStream
 command! -nargs=0 CreateCompletionLine call CreateCompletionLine()
 
 nnoremap <Leader>I :CreateCompletion 1024<CR>
+vnoremap <Leader>I :<C-U>CreateVisualCompletionStream 1024<CR>
 
 let g:vim_codex_loaded = 1
